@@ -1087,7 +1087,20 @@ class BaseDatabaseSchemaEditor:
             name = IndexName(model._meta.db_table, columns, '_uniq', create_unique_name)
         else:
             name = self.quote_name(name)
-        columns = Columns(table, columns, self.quote_name, case_insensitive=case_insensitive)
+
+        if case_insensitive:
+            sql = ""
+            for col in columns:
+                sql += self.sql_alter_column_type % {
+                    'column': self.quote_name(col),
+                    'type': 'citext'
+                } + ","
+            self.execute(self.sql_alter_column % {
+                'table': table,
+                'changes': sql[:-1]})
+
+        columns = Columns(table, columns, self.quote_name)
+
         if condition:
             return Statement(
                 self.sql_create_unique_index,
@@ -1097,13 +1110,6 @@ class BaseDatabaseSchemaEditor:
                 condition=' WHERE ' + condition,
             ) if self.connection.features.supports_partial_indexes else None
         else:
-            if case_insensitive:
-                return Statement(
-                    self.sql_create_unique_no_condition,
-                    table=table,
-                    name=name,
-                    columns=columns,
-                )
             return Statement(
                 self.sql_create_unique,
                 table=table,

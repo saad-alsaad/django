@@ -76,10 +76,9 @@ class TableColumns(Table):
 class Columns(TableColumns):
     """Hold a reference to one or many columns."""
 
-    def __init__(self, table, columns, quote_name, col_suffixes=(), case_insensitive=False):
+    def __init__(self, table, columns, quote_name, col_suffixes=()):
         self.quote_name = quote_name
         self.col_suffixes = col_suffixes
-        self.case_insensitive = case_insensitive
         super().__init__(table, columns)
 
     def __str__(self):
@@ -89,8 +88,6 @@ class Columns(TableColumns):
             except IndexError:
                 return self.quote_name(column)
 
-        if self.case_insensitive:
-            return ', '.join('lower({})'.format(col_str(column, idx)) for idx, column in enumerate(self.columns))
         return ', '.join(col_str(column, idx) for idx, column in enumerate(self.columns))
 
 
